@@ -1,0 +1,99 @@
+// =========================================================================
+// ВАШ ЯНДЕКС ТОКЕН
+// Вставьте ваш OAuth-токен в кавычки ниже.
+// =========================================================================
+const YANDEX_OAUTH_TOKEN = 'mytoken'; 
+// =========================================================================
+/**
+ * Главная функция. Должна вернуть ИЛИ ConferenceData, ИЛИ ConferenceError.
+ * @return {ConferenceData|ConferenceError} Объект конференции или объект ошибки.
+ */
+function createTelemostConference(eventData) {
+  Logger.log("Event data received: " + JSON.stringify(eventData));
+  
+  // Проверяем, вставлен ли токен
+  if (!YANDEX_OAUTH_TOKEN) {
+    Logger.log("Ошибка: Токен не установлен");
+    return ConferenceDataService.newConferenceError()
+      .setConferenceErrorType(ConferenceDataService.ConferenceErrorType.AUTHENTICATION);
+  }
+  
+  try {
+    const apiUrl = 'https://cloud-api.yandex.net/v1/telemost-api/conferences';
+    
+    // Получаем email организатора из объекта события
+    const organizerEmail = Session.getEffectiveUser().getEmail();
+    Logger.log("Организатор события: " + organizerEmail);
+    
+    // Создаем полезную нагрузку с добавлением организатора как соведущего
+    const payload = {
+      'access_level': 'PUBLIC',
+      'cohosts': [
+        {
+          'email': organizerEmail
+        }
+      ]
+    };
+    
+    const options = {
+      'method': 'post',
+      'contentType': 'application/json',
+      'headers': {
+        'Authorization': YANDEX_OAUTH_TOKEN,
+      },
+      'payload': JSON.stringify(payload),
+      'muteHttpExceptions': true
+    };
+    
+    Logger.log("Отправка запроса в Телемост API с полезной нагрузкой: " + JSON.stringify(payload));
+    const response = UrlFetchApp.fetch(apiUrl, options);
+    const responseCode = response.getResponseCode();
+    Logger.log("Код ответа: " + responseCode);
+    Logger.log("Содержимое ответа: " + response.getContentText());
+    
+    if (responseCode !== 201 && responseCode !== 200) {
+      if (responseCode === 401) {
+        Logger.log("Ошибка авторизации (401). Токен недействителен.");
+        return ConferenceDataService.newConferenceError()
+          .setConferenceErrorType(ConferenceDataService.ConferenceErrorType.AUTHENTICATION);
+      }
+      Logger.log(`Ошибка API Яндекса. Код: ${responseCode}. Ответ: ${response.getContentText()}`);
+      return ConferenceDataService.newConferenceError()
+        .setConferenceErrorType(ConferenceDataService.ConferenceErrorType.TEMPORARY);
+    }
+    
+    const data = JSON.parse(response.getContentText());
+    Logger.log("Успешный ответ: " + JSON.stringify(data));
+    
+    // Используем join_url из ответа API
+    const joinUrl = data.join_url;
+    
+    if (!joinUrl) {
+      Logger.log("Ошибка: URL для присоединения отсутствует в ответе API");
+      return ConferenceDataService.newConferenceError()
+        .setConferenceErrorType(ConferenceDataService.ConferenceErrorType.TEMPORARY);
+    }
+    
+    // Создаем правильный объект ConferenceData используя правильные методы
+    const entryPoint = ConferenceDataService.newEntryPoint()
+      .setEntryPointType(ConferenceDataService.EntryPointType.VIDEO)
+      .setUri(joinUrl);
+    
+    // Добавляем метку в параметрах, если этот метод доступен
+    try {
+      entryPoint.setLabel("Присоединиться к Телемосту");
+    } catch (e) {
+      Logger.log("Метод setLabel не найден, продолжаем без него: " + e.toString());
+    }
+    
+    // Создаем и возвращаем объект данных конференции
+    return ConferenceDataService.newConferenceDataBuilder()
+      .addEntryPoint(entryPoint)
+      .setConferenceId(data.id)
+      .build();
+  } catch (err) {
+    Logger.log("Критическая ошибка скрипта: " + err.toString());
+    return ConferenceDataService.newConferenceError()
+      .setConferenceErrorType(ConferenceDataService.ConferenceErrorType.PERMANENT);
+  }
+}
