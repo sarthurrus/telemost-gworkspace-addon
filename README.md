@@ -28,7 +28,7 @@ https://github.com/user-attachments/assets/b814d05c-03d7-482a-82bd-2cafc2cd62d2
 
 ## Шаг 2: Настройка проекта Google Cloud
 
-1. Создайте новый проект в (Google Cloud Platform)[https://console.cloud.google.com/]:
+1. Создайте новый проект в [Google Cloud Platform](https://console.cloud.google.com/):
 
 2. Включите нужные API:
 
