@@ -21,7 +21,7 @@
 1. Создайте новый AppScript проект в вашем Google Workspace: script.google.com
 2. Зайдите в Настройки проекта, активируйте флаг "Показывать файл манифеста appsscript.json в редакторе"
 3. Скопируйте appscript.json.template из текущего репозитория в файл appscript.json
-4. Скопируйте code.js.template из текущего репозитория в файл code.js
+4. Скопируйте code.gs.template из текущего репозитория в файл code.gs
 
 ## Шаг 2: Настройка проекта Google Cloud
 
