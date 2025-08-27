@@ -1,0 +1,27 @@
+{
+  "timeZone": "Europe/Moscow",
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "urlFetchWhitelist": [
+    "https://telemost.yandex.ru/",
+    "https://cloud-api.yandex.net/v1/telemost-api/conferences"
+  ],
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/calendar.addons.execute",
+    "https://www.googleapis.com/auth/calendar.addons.current.event.write",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ],
+  "calendar": {
+    "name": "Yandex Telemost",
+    "logoUrl": "urllogo_from_gcp_project.png",
+    "conferenceSolution": [
+      {
+        "id": "yandex-telemost-direct",
+        "name": "Yandex Telemost",
+        "logoUrl": "urllogo_from_gcp_project.png",
+        "onCreateFunction": "createTelemostConference"
+      }
+    ]
+  }
+}
